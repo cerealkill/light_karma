@@ -5,9 +5,10 @@ from datetime import datetime
 from loader import ClientesLoader
 from miner import Miner
 from writer import XlsxWriter
+from utils import MANTRA
 
-import utils
-
+from helper import list
+from helper import pickle
 
 KARMA = "livro_sagrado/karma_pickle.pkl"
 PEDIDOS = "livro_sagrado/pedidos_pickle.pkl"
@@ -40,7 +41,7 @@ def avalia_karma():
     Descobre quantos arquivos serão enviados para planilha excel
     """
     if os.path.exists(KARMA):
-        karma = utils.get_pickle(KARMA)
+        karma = pickle.get_pickle(KARMA)
     else:
         karma = {}
     this_life = {}
@@ -62,7 +63,7 @@ def avalia_almas(karma_a_pagar, lista_impuros):
     Carrega texto dos PDFs na memória
     """
     if os.path.exists(PDFS):
-        pdf_dict = utils.get_pickle(PDFS)
+        pdf_dict = pickle.get_pickle(PDFS)
     else:
         pdf_dict = {}
     # Extrai objetos de texto dos PDFs
@@ -71,9 +72,9 @@ def avalia_almas(karma_a_pagar, lista_impuros):
         file_name = karma_a_pagar[k]
         try:
             # Carrega PDF de pedidos, recorta e transforma em texto
-            pdf_loader = PDFLoader(file_name, SENHA_PDF_PEDIDOS)
+            # pdf_loader = PDFLoader(file_name, SENHA_PDF_PEDIDOS)
             pdf_dict[k] = pdf_loader.pdf
-            utils.save_pickle(pdf_dict, PDFS)
+            pickle.save_pickle(pdf_dict, PDFS)
         except Exception as err:
             # Salva PDF na lista de rejeitados
             lista_impuros.append({file_name, err.message})
@@ -85,7 +86,7 @@ def entoa_mantra(dicionario_almas, karma, karma_a_pagar, lista_impuros):
     Minera os dados dos objetos de texto estruturado e tranforma em Pedidos
     """
     if os.path.exists(PEDIDOS):
-        dicionario_pedidos = utils.get_pickle(PEDIDOS)
+        dicionario_pedidos = pickle.get_pickle(PEDIDOS)
     else:
         dicionario_pedidos = {}
     novas_almas = [k for k in karma_a_pagar if k not in dicionario_pedidos]
@@ -99,15 +100,15 @@ def entoa_mantra(dicionario_almas, karma, karma_a_pagar, lista_impuros):
             karma[hash(file_name)] = file_name
             # Salva alterações
             dicionario_pedidos[k] = pedidos
-            utils.save_pickle(karma, KARMA)
-            utils.save_pickle(dicionario_pedidos, PEDIDOS)
+            pickle.save_pickle(karma, KARMA)
+            pickle.save_pickle(dicionario_pedidos, PEDIDOS)
         except Exception as err:
             # Salva PDF na lista de rejeitados
             lista_impuros.append({file_name, err.message})
         finally:
             # Limpa o karma
-            print(next(utils.MANTRA))
-    lista_pedidos = utils.flatten(dicionario_pedidos.values())
+            print(next(MANTRA))
+    lista_pedidos = list.flatten(dicionario_pedidos.values())
     # Carrega o XLS de filiais, extrai os clientes e atualiza os pedidos
     clientes_loader = ClientesLoader(PLANILHA_FILIAIS, PLANILHA_FILIAIS_ABA_CLIENTES, CLIENTES)
     clientes_loader.update_pedidos(lista_pedidos)
